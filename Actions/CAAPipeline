@@ -1,0 +1,48 @@
+{
+    "name": "CAAPipeline",
+    "properties": {
+        "description": "Copy data from a blob to Azure SQL table",
+        "activities": [
+            {
+                "type": "Copy",
+                "typeProperties": {
+                    "source": {
+                        "type": "BlobSource"
+                    },
+                    "sink": {
+                        "type": "SqlSink",
+                        "writeBatchSize": 10000,
+                        "writeBatchTimeout": "60.00:00:00"
+                    }
+                },
+                "inputs": [
+                    {
+                        "name": "EmpTableBlob"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "name": "EmpSQLTable"
+                    }
+                ],
+                "policy": {
+                    "timeout": "01:00:00",
+                    "concurrency": 1,
+                    "executionPriorityOrder": "NewestFirst",
+                    "style": "StartOfInterval"
+                },
+                "scheduler": {
+                    "frequency": "Minute",
+                    "interval": 15
+                },
+                "name": "CopyFromBlobToSQL",
+                "description": "Push Regional Effectiveness Campaign data to Azure SQL database"
+            }
+        ],
+        "start": "2016-09-01T00:00:00Z",
+        "end": "2016-09-30T00:00:00Z",
+        "isPaused": true,
+        "hubName": "caadatafactoryadms_hub",
+        "pipelineMode": "Scheduled"
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "name": "EmpSQLTable",
+    "properties": {
+        "structure": [
+            {
+                "name": "FirstName",
+                "type": "String"
+            },
+            {
+                "name": "LastName",
+                "type": "String"
+            }
+        ],
+        "published": false,
+        "type": "AzureSqlTable",
+        "linkedServiceName": "AzureSqlLinkedService",
+        "typeProperties": {
+            "tableName": "emp"
+        },
+        "availability": {
+            "frequency": "Minute",
+            "interval": 15
+        }
+    }
+}

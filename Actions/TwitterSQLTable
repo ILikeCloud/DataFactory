@@ -1,0 +1,57 @@
+{
+    "name": "TwitterSQLTable",
+    "properties": {
+        "structure": [
+            {
+                "name": "Client",
+                "type": "String"
+            },
+            {
+                "name": "Section",
+                "type": "String"
+            },
+            {
+                "name": "Category",
+                "type": "String"
+            },
+            {
+                "name": "Criteria",
+                "type": "String"
+            },
+            {
+                "name": "Number in sample",
+                "type": "String"
+            },
+            {
+                "name": "Estimated total",
+                "type": "String"
+            },
+            {
+                "name": "Percent",
+                "type": "String"
+            },
+            {
+                "name": "Twitter average percent",
+                "type": "String"
+            },
+            {
+                "name": "Twitter range from",
+                "type": "String"
+            },
+            {
+                "name": "Twitter range to",
+                "type": "String"
+            }
+        ],
+        "published": false,
+        "type": "AzureSqlTable",
+        "linkedServiceName": "AzureSqlLinkedService",
+        "typeProperties": {
+            "tableName": "twitter"
+        },
+        "availability": {
+            "frequency": "Minute",
+            "interval": 15
+        }
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "name": "AzureSqlLinkedService",
+    "properties": {
+        "description": "",
+        "hubName": "caadatafactoryadms_hub",
+        "type": "AzureSqlDatabase",
+        "typeProperties": {
+            "connectionString": "Data Source=tcp:contosoadsadms.database.windows.net,1433;Initial Catalog=caademo;Persist Security Info=False;User ID=adms;Password=**********;MultipleActiveResultSets=False;Connect Timeout=30;Encrypt=True;TrustServerCertificate=False"
+        }
+    }
+}

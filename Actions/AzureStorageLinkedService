@@ -1,0 +1,11 @@
+{
+    "name": "AzureStorageLinkedService",
+    "properties": {
+        "description": "",
+        "hubName": "caadatafactoryadms_hub",
+        "type": "AzureStorage",
+        "typeProperties": {
+            "connectionString": "DefaultEndpointsProtocol=https;AccountName=testingblobsadms;AccountKey=**********"
+        }
+    }
+}

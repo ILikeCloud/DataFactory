@@ -1,0 +1,108 @@
+{
+    "name": "TwitterTableBlob",
+    "properties": {
+        "structure": [
+            {
+                "name": "Client",
+                "type": "String"
+            },
+            {
+                "name": "Section",
+                "type": "String"
+            },
+            {
+                "name": "Category",
+                "type": "String"
+            },
+            {
+                "name": "Criteria",
+                "type": "String"
+            },
+            {
+                "name": "Number in sample",
+                "type": "String"
+            },
+            {
+                "name": "Estimated total",
+                "type": "String"
+            },
+            {
+                "name": "Percent",
+                "type": "String"
+            },
+            {
+                "name": "Twitter average percent",
+                "type": "String"
+            },
+            {
+                "name": "Twitter range from",
+                "type": "String"
+            },
+            {
+                "name": "Twitter range to",
+                "type": "String"
+            }
+        ],
+        "published": false,
+        "type": "AzureBlob",
+        "linkedServiceName": "AzureStorageLinkedService",
+        "typeProperties": {
+            "folderPath": "twitter-ingest/{Year}/{Month}/{Day}/{Hour}/{Minute}",
+            "format": {
+                "type": "TextFormat",
+                "rowDelimiter": "\n",
+                "columnDelimiter": ",",
+                "quoteChar": "\"",
+                "skipLineCount": 1
+            },
+            "partitionedBy": [
+                {
+                    "name": "Year",
+                    "value": {
+                        "type": "DateTime",
+                        "date": "SliceStart",
+                        "format": "yyyy"
+                    }
+                },
+                {
+                    "name": "Month",
+                    "value": {
+                        "type": "DateTime",
+                        "date": "SliceStart",
+                        "format": "MM"
+                    }
+                },
+                {
+                    "name": "Day",
+                    "value": {
+                        "type": "DateTime",
+                        "date": "SliceStart",
+                        "format": "dd"
+                    }
+                },
+                {
+                    "name": "Hour",
+                    "value": {
+                        "type": "DateTime",
+                        "date": "SliceStart",
+                        "format": "HH"
+                    }
+                },
+                {
+                    "name": "Minute",
+                    "value": {
+                        "type": "DateTime",
+                        "date": "SliceStart",
+                        "format": "mm"
+                    }
+                }
+            ]
+        },
+        "availability": {
+            "frequency": "Minute",
+            "interval": 15
+        },
+        "external": true,
+        "policy": {}
+    }
+}
