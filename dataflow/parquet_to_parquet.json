@@ -1,0 +1,31 @@
+{
+	"name": "parquet_to_parquet",
+	"properties": {
+		"folder": {
+			"name": "DataFlow Approach"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_Parquet_dataflow_parameterized",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_Parquet_dataflow_parameterized",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [],
+			"script": "parameters{\n\tsrc_schema as string,\n\tsrc_table as string,\n\tsrc_directory as string,\n\tdst_schema as string,\n\tdst_table as string,\n\tdst_directory as string\n}\nsource(output(\n\t\tlineid as integer,\n\t\tsmallfield as string,\n\t\tbigbigint as long,\n\t\tbigfield as string,\n\t\tcreateddate as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet',\n\twildcardPaths:[('full/'+$dst_directory+'/'+$dst_table+'/'+$dst_schema+'_'+$dst_table+'.parquet')]) ~> source1\nsource1 sink(input(\n\t\tlineid as integer,\n\t\tsmallfield as string,\n\t\tbigbigint as long,\n\t\tbigfield as string,\n\t\tcreateddate as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet',\n\tpartitionFileNames:[('full/'+$dst_directory+'/'+$dst_table+'/converted/'+$dst_schema+'_'+$dst_table+'.parquet')],\n\tpartitionBy('hash', 1),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink1"
+		}
+	}
+}

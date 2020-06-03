@@ -1,0 +1,55 @@
+{
+	"name": "p_azuresql_to_sqldw",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy data1",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"queryTimeout": "02:00:00"
+					},
+					"sink": {
+						"type": "SqlDWSink"
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "datasource_azuresql",
+						"type": "DatasetReference",
+						"parameters": {
+							"azuresql_schema": "dbo",
+							"azuresql_table": "tbl1"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "datasource_sqldw",
+						"type": "DatasetReference",
+						"parameters": {
+							"sqldw_schema": "dbo",
+							"sqldw_table": "tbl1"
+						}
+					}
+				]
+			}
+		],
+		"folder": {
+			"name": "SQL to SQLDW"
+		},
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

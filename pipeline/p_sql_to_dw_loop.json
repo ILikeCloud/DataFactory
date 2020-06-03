@@ -1,0 +1,254 @@
+{
+	"name": "p_sql_to_dw_loop",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup pipeline_parameter2",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "select\nlineid, src_server,src_db,src_schema,src_table,src_type,dst_server,dst_db,dst_schema,dst_table,dst_type\nFrom pipeline_parameter2\nwhere process_type = 'sql-sqldw' and isactive = 1\norder by priority_lane",
+						"queryTimeout": "02:00:00"
+					},
+					"dataset": {
+						"referenceName": "DS_ASQLDB_PIPEINE_PARAMETER",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach pipeline_parameter2",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup pipeline_parameter2",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup pipeline_parameter2').output.value",
+						"type": "Expression"
+					},
+					"batchCount": 4,
+					"activities": [
+						{
+							"name": "Wait1",
+							"type": "Wait",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"waitTimeInSeconds": 1
+							}
+						},
+						{
+							"name": "Copy data_copy1",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Wait1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"queryTimeout": "02:00:00"
+								},
+								"sink": {
+									"type": "SqlDWSink",
+									"preCopyScript": {
+										"value": "@{concat('truncate table ',item().dst_schema,'.',item().dst_table)}",
+										"type": "Expression"
+									},
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false,
+								"parallelCopies": 10
+							},
+							"inputs": [
+								{
+									"referenceName": "datasource_azuresql",
+									"type": "DatasetReference",
+									"parameters": {
+										"azuresql_schema": {
+											"value": "@item().src_schema",
+											"type": "Expression"
+										},
+										"azuresql_table": {
+											"value": "@item().src_table",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "datasource_sqldw",
+									"type": "DatasetReference",
+									"parameters": {
+										"sqldw_schema": {
+											"value": "@item().dst_schema",
+											"type": "Expression"
+										},
+										"sqldw_table": {
+											"value": "@item().dst_table",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Stored procedure to save results",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Copy data_copy1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[update_pipeline_parameter_table]",
+								"storedProcedureParameters": {
+									"LastModifiedtime": {
+										"value": {
+											"value": "@formatDateTime(pipeline().TriggerTime,'s')",
+											"type": "Expression"
+										},
+										"type": "DateTime"
+									},
+									"lineid": {
+										"value": {
+											"value": "@item().lineid",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"status": {
+										"value": "Successful",
+										"type": "String"
+									},
+									"rowscount": {
+										"value": {
+											"value": "@activity('Copy data_copy1').output.rowsCopied",
+											"type": "Expression"
+										}
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "DS_AZSQLDB_PipelineParameteres",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "Stored procedure to save results_copy1",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Copy data_copy1",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[update_pipeline_parameter_table]",
+								"storedProcedureParameters": {
+									"LastModifiedtime": {
+										"value": {
+											"value": "@formatDateTime(pipeline().TriggerTime,'s')",
+											"type": "Expression"
+										},
+										"type": "DateTime"
+									},
+									"lineid": {
+										"value": {
+											"value": "@item().lineid",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"status": {
+										"value": "Fail",
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "DS_AZSQLDB_PipelineParameteres",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			}
+		],
+		"variables": {
+			"azuresql_table": {
+				"type": "String",
+				"defaultValue": "tbl3"
+			},
+			"azuresql_schema": {
+				"type": "String",
+				"defaultValue": "dbo"
+			},
+			"sqldw_table": {
+				"type": "String",
+				"defaultValue": "tbl3"
+			},
+			"sqldw_schema": {
+				"type": "String",
+				"defaultValue": "dbo"
+			}
+		},
+		"folder": {
+			"name": "SQL to SQLDW"
+		},
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

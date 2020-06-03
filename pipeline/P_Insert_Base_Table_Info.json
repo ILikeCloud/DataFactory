@@ -1,0 +1,75 @@
+{
+	"name": "P_Insert_Base_Table_Info",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy data1",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "SELECT \nQUOTENAME(table_Schema) + '.' + QUOTENAME(TABLE_NAME) AS Table_Name, TABLE_CATALOG\n   FROM information_Schema.tables\n   WHERE TABLE_TYPE = 'BASE TABLE'",
+						"queryTimeout": "02:00:00"
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": "delete from [dbo].[pipeline_parameter]\n",
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "Table_Name",
+									"type": "String"
+								},
+								"sink": {
+									"name": "Table_Name",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "TABLE_CATALOG",
+									"type": "String"
+								},
+								"sink": {
+									"name": "TABLE_CATALOG",
+									"type": "String"
+								}
+							}
+						]
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_SQL",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ASQLDB_PIPEINE_PARAMETER",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"folder": {
+			"name": "SQL to SQLDW"
+		},
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

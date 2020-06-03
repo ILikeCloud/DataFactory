@@ -1,0 +1,17 @@
+{
+	"name": "datasource_azuresql_noschema",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "linkedservice_azuresql",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"azuresql_server": "sql-demo-parameterized.database.windows.net",
+				"azuresql_db": "db1-demo-parameterized"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

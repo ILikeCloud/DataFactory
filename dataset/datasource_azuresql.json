@@ -1,0 +1,35 @@
+{
+	"name": "datasource_azuresql",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "linkedservice_azuresql",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"azuresql_server": "sql-demo-parameterized.database.windows.net",
+				"azuresql_db": "db1-demo-parameterized"
+			}
+		},
+		"parameters": {
+			"azuresql_schema": {
+				"type": "String"
+			},
+			"azuresql_table": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().azuresql_schema",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().azuresql_table",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

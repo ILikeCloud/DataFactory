@@ -1,0 +1,100 @@
+{
+	"name": "parquet_to_sqldw",
+	"properties": {
+		"activities": [
+			{
+				"name": "parquet_to_sqldw",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "parquet_to_sqldw",
+						"type": "DataFlowReference",
+						"parameters": {
+							"src_schema": {
+								"value": "'@{pipeline().parameters.p_src_schema}'",
+								"type": "Expression"
+							},
+							"src_table": {
+								"value": "'@{pipeline().parameters.p_src_table}'",
+								"type": "Expression"
+							},
+							"src_directory": {
+								"value": "'@{pipeline().parameters.p_src_directory}'",
+								"type": "Expression"
+							},
+							"dst_schema": {
+								"value": "'@{pipeline().parameters.p_dst_schema}'",
+								"type": "Expression"
+							},
+							"dst_table": {
+								"value": "'@{pipeline().parameters.p_dst_table}'",
+								"type": "Expression"
+							},
+							"dst_directory": {
+								"value": "'@{pipeline().parameters.p_dst_directory}'",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"sink1": {
+								"sqldw_schema": {
+									"value": "@pipeline().parameters.p_dst_schema",
+									"type": "Expression"
+								},
+								"sqldw_table": {
+									"value": "@pipeline().parameters.p_dst_table",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					"staging": {
+						"linkedService": {
+							"referenceName": "LinkedSerivice_ADLS2",
+							"type": "LinkedServiceReference"
+						},
+						"folderPath": "landing/temp"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"p_dst_schema": {
+				"type": "string"
+			},
+			"p_dst_table": {
+				"type": "string"
+			},
+			"p_dst_directory": {
+				"type": "string"
+			},
+			"p_src_schema": {
+				"type": "string"
+			},
+			"p_src_table": {
+				"type": "string"
+			},
+			"p_src_directory": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "DataFlow Approach"
+		},
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

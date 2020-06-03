@@ -1,0 +1,309 @@
+{
+	"name": "p_sqldelta_to_adls_loop",
+	"properties": {
+		"activities": [
+			{
+				"name": "LookupSQLPipeLineItems",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "select\nlineid, src_server,src_db,src_schema,src_table,src_type,dst_server,dst_db,dst_schema,dst_table,dst_type,dst_directory\n,pipeline_watermark_field,pipeline_watermark_date, pipleline_pk_field\nFrom pipeline_parameter2\nwhere process_type = 'sqldelta-adls' and isactive = 1\norder by priority_lane\n",
+						"queryTimeout": "02:00:00"
+					},
+					"dataset": {
+						"referenceName": "DS_ASQLDB_PIPEINE_PARAMETER",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEachPipelineItem",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "LookupSQLPipeLineItems",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('LookupSQLPipeLineItems').output.value",
+						"type": "Expression"
+					},
+					"batchCount": 4,
+					"activities": [
+						{
+							"name": "Wait1",
+							"type": "Wait",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"waitTimeInSeconds": 1
+							}
+						},
+						{
+							"name": "Copy data1",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Copy PK",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "@concat('select * from ',item().src_schema,'.',item().src_table,' where ',item().pipeline_watermark_field,' >=''',item().pipeline_watermark_date,'''')",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"parallelCopies": 10
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_SQL",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "datasource_adls2_delta",
+									"type": "DatasetReference",
+									"parameters": {
+										"table_name": {
+											"value": "@item().dst_table",
+											"type": "Expression"
+										},
+										"table_catalog_name": {
+											"value": "@item().dst_schema",
+											"type": "Expression"
+										},
+										"directory": {
+											"value": "@item().dst_directory",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Stored procedure to save results",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Copy data1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[update_pipeline_parameter_table]",
+								"storedProcedureParameters": {
+									"LastModifiedtime": {
+										"value": {
+											"value": "@formatDateTime(pipeline().TriggerTime,'s')",
+											"type": "Expression"
+										},
+										"type": "DateTime"
+									},
+									"lineid": {
+										"value": {
+											"value": "@item().lineid",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"status": {
+										"value": "Successful",
+										"type": "String"
+									},
+									"rowscount": {
+										"value": {
+											"value": "@activity('Copy data1').output.rowsCopied",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"processtype": {
+										"value": "Delta",
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "DS_AZSQLDB_PipelineParameteres",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "Stored procedure to save results_copy1",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Copy data1",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[update_pipeline_parameter_table]",
+								"storedProcedureParameters": {
+									"LastModifiedtime": {
+										"value": {
+											"value": "@formatDateTime(pipeline().TriggerTime,'s')",
+											"type": "Expression"
+										},
+										"type": "DateTime"
+									},
+									"lineid": {
+										"value": {
+											"value": "@item().lineid",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"status": {
+										"value": "Fail",
+										"type": "String"
+									},
+									"rowscount": {
+										"value": {
+											"value": "@activity('Copy data1').output.rowsCopied",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"processtype": {
+										"value": "Delta",
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "DS_AZSQLDB_PipelineParameteres",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "Copy PK",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Wait1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "@concat('select ',item().pipleline_pk_field,' from ',item().src_schema,'.',item().src_table)",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"parallelCopies": 10
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_SQL",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "datasource_adls2_pk",
+									"type": "DatasetReference",
+									"parameters": {
+										"table_name": {
+											"value": "@item().dst_table",
+											"type": "Expression"
+										},
+										"table_catalog_name": {
+											"value": "@item().dst_schema",
+											"type": "Expression"
+										},
+										"directory": "pk"
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"folder": {
+			"name": "SQL to ADLS to SQLDW"
+		},
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

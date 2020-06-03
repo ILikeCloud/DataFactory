@@ -1,0 +1,30 @@
+{
+	"name": "tbl1_pk",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LinkedSerivice_ADLS2",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "CRUD Operation on PARQEUT"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "tbl1.parquet",
+				"folderPath": "pk/db1-demo-parameterized/tbl1",
+				"fileSystem": "landing"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": [
+			{
+				"name": "lineid",
+				"type": "INT32"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

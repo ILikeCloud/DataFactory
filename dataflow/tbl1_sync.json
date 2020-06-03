@@ -1,0 +1,64 @@
+{
+	"name": "tbl1_sync",
+	"properties": {
+		"folder": {
+			"name": "CRUD Operation on PARQEUT"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "tbl1_full",
+						"type": "DatasetReference"
+					},
+					"name": "full"
+				},
+				{
+					"dataset": {
+						"referenceName": "tbl1_delta",
+						"type": "DatasetReference"
+					},
+					"name": "delta"
+				},
+				{
+					"dataset": {
+						"referenceName": "tbl1_pk",
+						"type": "DatasetReference"
+					},
+					"name": "PK"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "tbl1_full",
+						"type": "DatasetReference"
+					},
+					"name": "CreateTBL1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "NotChanged"
+				},
+				{
+					"name": "Inserted"
+				},
+				{
+					"name": "Updated"
+				},
+				{
+					"name": "UnionAll"
+				},
+				{
+					"name": "Deleted"
+				},
+				{
+					"name": "RemoveDeleted"
+				}
+			],
+			"script": "source(output(\n\t\tlineid as integer,\n\t\tmembername as string,\n\t\tmemberdate as timestamp,\n\t\tcreateddate as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> full\nsource(output(\n\t\tlineid as integer,\n\t\tmembername as string,\n\t\tmemberdate as timestamp,\n\t\tcreateddate as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> delta\nsource(output(\n\t\tlineid as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> PK\nfull, delta exists(full@lineid == delta@lineid,\n\tnegate:true,\n\tbroadcast: 'auto')~> NotChanged\ndelta, full exists(delta@lineid == full@lineid,\n\tnegate:true,\n\tbroadcast: 'auto')~> Inserted\ndelta, full exists(delta@lineid == full@lineid,\n\tnegate:false,\n\tbroadcast: 'auto')~> Updated\nNotChanged, Inserted, Updated union(byName: true)~> UnionAll\nfull, PK exists(full@lineid == PK@lineid,\n\tnegate:true,\n\tbroadcast: 'auto')~> Deleted\nUnionAll, Deleted exists(UnionAll@lineid == full@lineid,\n\tnegate:true,\n\tbroadcast: 'auto')~> RemoveDeleted\nRemoveDeleted sink(input(\n\t\tlineid as integer,\n\t\tmembername as string,\n\t\tmemberdate as timestamp,\n\t\tcreateddate as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet',\n\tpartitionFileNames:['tbl1.parquet'],\n\tpartitionBy('hash', 1),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> CreateTBL1"
+		}
+	}
+}
